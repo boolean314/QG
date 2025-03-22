@@ -1,0 +1,155 @@
+package com.qg;
+
+import java.util.LinkedList;
+
+public class LinkedStack<E> {
+
+    private LinkedList<E> stack;
+    public LinkedStack(){
+        stack = new LinkedList<>();
+    }
+    //直接使用链表中的方法
+    public void push(E o){
+        stack.push(o);
+    }
+    public E pop(){
+        return stack.pop();
+    }
+    public boolean isEmpty(){
+        return stack.isEmpty();
+    }
+
+    //返回栈顶元素
+    public E peek(){
+        return stack.peek();
+    }
+    public int size(){
+        return stack.size();
+    }
+    public static void main(String[] args) {
+        LinkedStack stack = new LinkedStack();
+        stack.push(1);
+        stack.push(2);
+        stack.push(3);
+        System.out.println(stack.pop());
+        System.out.println(stack.peek());
+        System.out.println(stack.size());
+        System.out.println(stack.isEmpty());
+    }
+}
+package com.qg;
+
+import java.lang.foreign.Linker;
+import java.util.Scanner;
+
+public class Calculator {
+    private static LinkedStack<Character> stack= new LinkedStack<>();
+
+    //把中缀表达式转化为后缀表达式
+    public static String toSuffix(String expression){
+        StringBuilder output=new StringBuilder();
+        for (int i = 0; i < expression.length(); i++) {
+            char c=expression.charAt(i);//获取表达式中每个字符（数字）
+            if(Character.isDigit(c)){
+                while (i < expression.length() && Character.isDigit(expression.charAt(i))) {
+                    output.append(expression.charAt(i)); // 将连续的数字字符拼接到输出中
+                    i++;
+                }
+                i--; // 回退一步，因为外层循环会再增加一次 i
+                output.append(" "); // 用空格分隔数字
+            }else if(c=='('){
+                stack.push(c);//如果是左括号则入栈
+            }else if(c==')'){
+                while(!stack.isEmpty()&&stack.peek()!=(Object)'('){
+                    output.append(stack.pop()).append(" "); // 用空格分隔运算符
+
+                }
+                stack.pop();//将左括号弹出但不输出
+            }else if(isOperator(c)){
+                while(!stack.isEmpty()&&getPriority(c)<=getPriority((char)stack.peek())){
+                    output.append(stack.pop()).append(" "); // 用空格分隔运算符
+                }
+                stack.push(c);
+
+            }
+
+        }
+        while(!stack.isEmpty()){
+            output.append(stack.pop()).append(" "); // 用空格分隔运算符
+        }
+        return output.toString().trim(); // 去掉末尾多余的空格
+
+}
+//计算后缀表达式的结果
+private static double calculate(String expression){
+        LinkedStack<Double> numStack=new LinkedStack<>();
+    String[] tokens = expression.split(" "); // 按空格分割后缀表达式
+
+    for (String token : tokens) {
+        if (token.isEmpty()) {
+            continue; // 忽略空字符串
+        }
+        if (isNumeric(token)) {
+            numStack.push(Double.parseDouble(token)); // 如果是数字，压入栈中
+        } else if (isOperator(token.charAt(0))){
+            double num2 = numStack.pop(); // 弹出第二个操作数
+            double num1 = numStack.pop(); // 弹出第一个操作数
+            double result = 0;
+            switch (token.charAt(0)) {
+                case '+':
+                    result = num1 + num2;
+                    break;
+                case '-':
+                    result = num1 - num2;
+                    break;
+                case '*':
+                    result = num1 * num2;
+                    break;
+                case '/':
+                    result = num1 / num2;
+                    break;
+            }
+            numStack.push(result); // 将计算结果压入栈中
+        }
+    }
+    return numStack.pop(); // 返回最终结果
+}
+//判断字符是否为运算符
+private  static boolean isOperator(char c){
+        if(c=='+'||c=='-'||c=='*'||c=='/'){
+            return true;
+        }
+        return false;
+}
+//判断运算符的优先级
+private static int getPriority(char c){
+        switch(c){
+            case'+':
+            case'-':
+                return 1;
+            case'*':
+            case'/':
+                return 2;
+            default:
+ return -1;
+        }
+}
+//判断字符串是否为数字
+    private static boolean isNumeric(String str) {
+        try {
+            Double.parseDouble(str);//将字符串解析为有效数字
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    public static void main(String[] args) {
+        Scanner sc=new Scanner(System.in);
+        System.out.println("请输入表达式：");
+        String expression=sc.nextLine();
+        double result=calculate(toSuffix(expression));
+        System.out.println("计算结果为："+result);
+
+    }
+}
