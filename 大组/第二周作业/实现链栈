@@ -1,0 +1,39 @@
+package com.qg;
+
+import java.util.LinkedList;
+
+public class LinkedStack<E> {
+
+    private LinkedList<E> stack;
+    public LinkedStack(){
+        stack = new LinkedList<>();
+    }
+    //直接使用链表中的方法
+    public void push(E o){
+        stack.push(o);
+    }
+    public E pop(){
+        return stack.pop();
+    }
+    public boolean isEmpty(){
+        return stack.isEmpty();
+    }
+
+    //返回栈顶元素
+    public E peek(){
+        return stack.peek();
+    }
+    public int size(){
+        return stack.size();
+    }
+    public static void main(String[] args) {
+        LinkedStack stack = new LinkedStack();
+        stack.push(1);
+        stack.push(2);
+        stack.push(3);
+        System.out.println(stack.pop());
+        System.out.println(stack.peek());
+        System.out.println(stack.size());
+        System.out.println(stack.isEmpty());
+    }
+}
