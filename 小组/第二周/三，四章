@@ -1,0 +1,1519 @@
+# **三，四章**
+
+## **3.1如何编写程序界面**
+
+通过编写XML代码来编写界面，也可以通过可视化编辑工具
+
+
+
+## **3.2常用控件的使用方法**
+
+1.**TextView**
+
+```
+  <!-- 定义一个TextView控件 -->
+    <TextView
+        android:id="@+id/text_view" <!-- 设置TextView的id -->
+        android:layout_width="match_parent" <!-- 设置TextView的宽度为父容器的宽度 -->
+        android:layout_height="wrap_content" <!-- 设置TextView的高度为包裹内容的高度 -->
+        android:text="This is TextView" <!-- 设置TextView的文本内容 -->
+        android:textSize="24sp" <!-- 设置TextView的字体大小为24sp -->
+        android:textColor="#00ff00" <!-- 设置TextView的字体颜色为绿色 -->
+        android:gravity="center" <!-- 设置TextView的文本居中对齐 ,还有top,botton,left,right,center-->
+        />
+
+```
+
+
+
+**2.Button**
+
+```
+android:textAllCaps="false" //关闭自动转大写
+```
+
+```
+Button button=(Button)findViewById(R.id.button);
+button.setOnClickListener(new View.OnClickListener(){
+    @Override
+    public void onClick(View v) {
+
+    }
+});
+```
+
+也可以让MainActivity实现View.OnClickListener接口，在onCreate中创建监听器（this），再在外面重写onClick方法
+
+
+
+**3.EditText**
+
+运行用户在 控件中输入和编辑内容
+
+```
+<EditText
+    android:id="@+id/edit_text" <!-- 设置EditText控件的id -->
+    android:layout_width="match_parent" <!-- 设置EditText控件的宽度为父容器的宽度 -->
+    android:layout_height="wrap_content" <!-- 设置EditText控件的高度为自适应内容的高度 -->
+    android:hint="Type something here" <!-- 设置EditText控件的提示文字 -->
+    android:maxLines="2" <!-- 设置EditText控件的最大行数为2 ，超过2行自动向下滚动-->
+    android:minHeight="48dp"//防止编辑栏太小用户点击不方便
+    />
+```
+
+获取EditText中的数据
+
+```
+private EditText editText;//在onCreate方法外
+editText=(EditText)findViewById(R.id.edit_text);//获取EditText的实例
+ String inputText=editText.getText().toString();//将获取的数据转换为字符串的形式
+
+```
+
+
+
+**4.ImageView**
+
+用于在界面上展示图片，需要在drawable目录下提前准备好一些图片
+
+```
+<ImageView
+    android:id="@+id/image_view"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:src="@drawable/img_1"//设置图片资源
+    />
+```
+
+更改图片
+
+```
+private ImageView imageView;
+ imageView=(ImageView)findViewById(R.id.image_view);//同样需要获取ImageView的实例
+  imageView.setImageResource(R.drawable.img_2);//调用setImageResource方法
+```
+
+
+
+**5.ProgressBar**
+
+进度条默认是圆形进度条
+
+```
+style="?android:attr/progressBarStyleHorizontal"//改为水平进度条
+ android:max="100"//设置最大进度
+```
+
+所有控件都具有的属性：android:visibility="visible"可见的//"invisible"不可见但仍占据屏幕空间，即透明的//gone不可见且不占据屏幕空间
+
+默认是visible
+
+```
+ private ProgressBar progressBar;
+int progress=progressBar.getProgress();//获取进度条的进度
+progress+=10;
+progressBar.setProgress(progress);//修改进度条的进度
+```
+
+
+
+**6.AlertDialog**
+
+置顶在所有元素之上的，可以屏蔽掉其他控件的交互能力，一般用来提示一些重要内容或者警告信息
+
+```
+public void onClick(View v) {
+    // 创建一个AlertDialog.Builder对象
+    AlertDialog.Builder dialog=new AlertDialog.Builder(MainActivity.this);
+    // 设置对话框的标题
+    dialog.setTitle("This is a dialog");
+    // 设置对话框的内容
+    dialog.setMessage("Something important");
+    // 设置对话框是否可以用返回来关闭
+    dialog.setCancelable(false);
+    // 设置对话框的确定按钮，并设置点击事件
+    dialog.setPositiveButton("OK",new DialogInterface.OnClickListener(){
+        @Override
+        public void onClick(DialogInterface dialog, int which){
+
+        }
+
+    });
+    // 设置对话框的取消按钮，并设置点击事件
+    dialog.setNegativeButton("Cancel",new DialogInterface.OnClickListener(){
+        @Override
+        public void onClick(DialogInterface dialog, int which){
+        //int which 是按钮的索引
+        }
+    });
+    // 显示对话框（容易遗漏）
+    dialog.show();
+```
+
+```//
+import android.app.AlertDialog;//如果创建AlertDialog的对象报错，可能是没有导包
+```
+
+
+
+**7.ProgressDialog**
+
+用法类似于AlertDialog，但是ProgressDialog是在对话框中显示一个进度条，用于显示当前操作比较耗时，让用户耐心等待
+
+```
+// 创建一个ProgressDialog对象
+            ProgressDialog progressdialog=new ProgressDialog(MainActivity.this);
+// 设置ProgressDialog的标题
+            progressdialog.setTitle("This is ProgressDialog");
+// 设置ProgressDialog的消息
+            progressdialog.setMessage("Loading...");
+// 设置ProgressDialog是否可以取消，如果要设置成false，要做好代码设置，在数据加载完成后调用ProgressDialog的dismiss（）来关闭对话框，否则ProgressDialog会一直存在
+            progressdialog.setCancelable(true);
+// 显示ProgressDialog
+            progressdialog.show();
+```
+
+
+
+## **3.3 4种基本布局**
+
+**1.线性布局LinearLayout**
+
+```
+android:orientation="horizontal"//用于指定布局中控件的摆放方式，默认为水平摆放，这时width就不能为match_parent
+```
+
+```
+android:layout_gravity="top"//写在控件中，指定控件在布局中的对齐方式，android:gravity用于指定文字在控件中的对齐方式，在水平摆放时，只有垂直方向上对齐有效
+```
+
+```
+android:layout_weight="1"//写在控件属性中，根据占总和的比例来分配一行的空间，如果两个控件中一个不写，则只会留wrap_content的空间给这个控件
+```
+
+
+
+**2.相对布局RelativeLayout**
+
+**相对于父布局：**
+
+左上：
+
+android:layout_alignParentLeft="true"
+
+android:layout_alignParentTop="true"
+
+右上
+
+android:layout_alignParentRight="true"
+
+android:layout_alignParentTop="true"
+
+正中间：
+
+android:layout_centerInparent="true"
+
+左下
+
+android:layout_alignParentLeft="true"
+
+android:layout_alignParentBottom="true"
+
+右下
+
+android:layout_alignParentRight="true"
+
+android:layout_alignParentBottom="true"
+
+
+
+**相对于控件布局**
+
+```
+android:layout_above="@id/button3"
+android:layout_below="@id/button3"
+android:layout_toLeftOf="@id/button3"
+android:layout_toRightOf="@id/button3"
+注意定义的id要先出现，否则找不到
+```
+
+
+
+**3.帧布局FrameLayout**
+
+默认放在左上角，
+
+可以用android：layout_gravity=""来指定控件的位置
+
+比较少用
+
+
+
+**4.百分比布局**
+
+包括了：PercentFrameLayout和PercentRelativeLayout
+
+先在app/build.gradle中添加依赖
+
+ implementation ("androidx.percentlayout:percent:1.0.0")
+
+```
+<android.support.percent.PercentFrameLayout//写出完整的包名路径
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"//定义一个app的命名空间
+```
+
+```
+<Button
+    android:id="@+id/button3"
+    app:layout_widthPercent="50%"
+    app:layout_heightPercent="50%"
+       
+    android:layout_gravity="left|top"
+    android:text="Button3"
+```
+
+
+
+## **3.4 创建自定义控件**
+
+我们用的控件都直接或间接的继承于View，用的布局都直接或间接继承自ViewGroup
+
+**3.4.1.引入布局**
+
+新建一个title.xml布局文件，
+
+设置控件背景：
+
+```
+android:background="@drawable/ic_launcher_background"
+```
+
+```
+android:layout_margin="5dp"//指定控件在上下左右方向上偏移的距离
+```
+
+<include layout="@layout/title"/>//在用include引进标题栏
+
+要制作一个标题栏记得在onCreate方法中将原来自带的标题栏删除
+
+```
+ActionBar actonbar=getSupportActionBar();
+if(actionbar!=null)
+{
+    actionbar.hide();
+}
+```
+
+
+
+**3.4.2.创建自定义控件**
+
+以自定义标题栏控件为例：
+
+1.先在layout中编写好title的布局（记得用线性布局）
+
+2.新建一个TitleLayout类，继承自LinearLayout，构建函数，创建LayoutInflater对象
+
+
+
+```
+public class TitleLayout extends LinearLayout {
+    // 构造函数，用于初始化TitleLayout
+    public TitleLayout(Context context, AttributeSet attrs) {
+        super(context,attrs);
+        // 从布局文件中加载title.xml布局文件
+        LayoutInflater.from(context).inflate(R.layout.title,this);
+        //**利用from方法获取LayoutInflater的对象，再用inflate（）动态加载一个布局文件，
+        第一个参数传要加载的布局文件，第二个参数是给加载好的布局添加一个父布局
+        // 获取title_back按钮
+        Button titleBack=(Button)findViewById(R.id.title_back);
+        // 获取title_edit按钮
+        Button titleEdit=(Button)findViewById(R.id.title_edit);
+        // 设置title_back按钮的点击事件
+        titleBack.setOnClickListener(new OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                // 点击后关闭当前Activity
+                ((Activity)getContext()).finish();
+            }
+        });
+
+        titleEdit.setOnClickListener(new OnClickListener(){
+            @Override
+            public void onClick(View v) {
+             
+                Toast.makeText(getContext(),"You Clicked Edit",Toast.LENGTH_SHORT).show();
+                //上下文传getContext（）
+            }
+        });
+    }
+}
+```
+
+3.在布局文件中添加这个自定义控件
+
+```
+<com.example.uilayouttest.TitleLayout//要指明包名和完整类名
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+     />
+```
+
+
+
+## **3.5 ListView**
+
+**3.5.1简单用法**
+
+```
+<ListView
+    android:id="@+id/list_view"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    />
+```
+
+```
+private String[] data={
+        "苹果", "香蕉", "橙子", "葡萄", "草莓", "西瓜", "樱桃", "柠檬", "芒果", "桃子",
+        "梨", "柚子", "蓝莓", "菠萝", "榴莲", "火龙果", "荔枝", "柿子", "木瓜"
+};
+
+ // 创建一个ArrayAdapter对象，用于将数据绑定到ListView上
+        ArrayAdapter<String>adapter=new ArrayAdapter<>(MainActivity.this,
+                // 使用Android提供的简单列表项布局
+                android.R.layout.simple_list_item_1,//这是ListView的子项布局id，里面只有一个TextView
+                data
+                );
+        // 获取ListView控件
+        ListView listView=(ListView)findViewById(R.id.list_view);
+        // 将ArrayAdapter对象设置给ListView
+        listView.setAdapter(adapter);
+```
+
+
+
+**3.5.2 定制ListView的界面**
+
+1.新建一个Fruit实体类作为ListView适配器的适配类型
+
+```
+public class Fruit {
+    private String name;
+    private int imageId;
+    public Fruit(String name,int imageId){
+        this.name=name;
+        this.imageId=imageId;
+    }
+    public String getName(){
+        return name;
+    }
+    public int getImageId(){
+        return imageId;
+    }
+}
+```
+
+2.为ListView的子项指定一个我们自定义的布局fruit_item.xml
+
+​    添加两个控件TextView和ImageView
+
+3..创建自定义的适配器类FruitAdapter，继承自ArrayAdapter，泛型指定为Fruit类
+
+```
+public class FruitAdapter extends ArrayAdapter<Fruit> {
+    // 定义一个变量，用于存储布局文件ID
+    private int resourceId;
+    // 构造方法，传入上下文、布局文件ID和数据源
+    public FruitAdapter(Context context, int textViewResourceId, List<Fruit>bojects){
+        super(context,textViewResourceId,bojects);
+        resourceId=textViewResourceId;
+    }
+    // 重写getView方法，用于设置每个item的布局
+    @Override
+    public View getView(int position, View convertView, ViewGroup parent) {
+        // 获取当前item的数据
+        Fruit fruit = (Fruit) getItem(position);
+        // 加载布局文件
+        View view = LayoutInflater.from(getContext()).inflate(resourceId, parent, false);
+        // 获取布局中的ImageView和TextView
+        ImageView fruitImage = (ImageView) view.findViewById(R.id.fruit_image);
+
+        TextView fruitName=(TextView)view.findViewById(R.id.fruit_name);
+        // 设置ImageView的图片
+        fruitImage.setImageResource(fruit.getImageId());
+        // 设置TextView的文本
+        fruitName.setText(fruit.getName());
+        return view;
+    }
+}
+```
+
+4.创建fruitList,将fruit数据存储到fruitList 中（可以抽取成方法，直接在onCreate中调用即可），创建自定义的FruitAdapter对象adapter,再把adapter传给ListView的实例
+
+```
+private List<Fruit>fruitList=new ArrayList<>();
+ //在onCreate方法中
+ initFruits();
+      FruitAdapter adapter=new FruitAdapter(MainActivity.this,
+              R.layout.fruit_item,
+              fruitList);
+      ListView listView=(ListView)findViewById(R.id.list_view);
+      listView.setAdapter(adapter);
+  //
+private void initFruits(){
+    Fruit apple=new Fruit("Apple",R.drawable.apple);
+    fruitList.add(apple);
+    Fruit banana=new Fruit("Banana",R.drawable.banana);
+    fruitList.add(banana);
+    }
+```
+
+
+
+**3.5.3 提升ListView的运行效率**
+
+1.快速滚动时，FruitAdapter中的getView()每次都会把布局重新加载一遍
+
+2.getView()中View的findViewById()每次都会被调用
+
+优化方法
+
+1.对convertView(用于对之前加载好的布局进行缓存)进行判断
+
+2.新增一个内部类ViewHolder，调用view.setTag（viewHolder）将viewHolder存在view中，后面再用getTag重新获取
+
+```
+public class ViewHolder {
+   TextView fruitName;
+   ImageView fruitImage;
+}
+```
+
+```
+public View getView(int position, View convertView, ViewGroup parent) {
+    Fruit fruit = (Fruit) getItem(position);
+    View view;
+    ViewHolder viewHolder;
+    if (convertView == null) {
+        view = LayoutInflater.from(getContext()).inflate(resourceId, parent, false);
+        viewHolder = new ViewHolder();
+        viewHolder.fruitImage = (ImageView) view.findViewById(R.id.fruit_image);
+        viewHolder.fruitName = (TextView) view.findViewById(R.id.fruit_name);
+        view.setTag(viewHolder);
+    } else {
+        view = convertView;
+        viewHolder = (ViewHolder) view.getTag();
+    }
+
+    viewHolder.fruitImage.setImageResource(fruit.getImageId());
+    viewHolder.fruitName.setText(fruit.getName());
+    return view;
+
+
+}
+```
+
+
+
+**3.5.4 ListView 的点击事件**
+
+```
+//注意是setOnItemClickListener
+listView.setOnItemClickListener(new AdapterView.OnItemClickListener(){
+   //注意重写的方法是onItemClick
+   @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        Fruit fruit=fruitList.get(position);
+        Toast.makeText(MainActivity.this,fruit.getName(),Toast.LENGTH_SHORT).show();
+
+    }
+});
+```
+
+
+
+## **3.6 更强大的滚动控件 RecyclerView**
+
+**3.6.1 RecyclerView的基本用法**
+
+```
+<androidx.recyclerview.widget.RecyclerView//添加依赖之后要完整路径
+    android:id="@+id/recycler_view"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" />
+    
+    //为RecyclerView的子项指定一个我们自定义的布局fruit_item.xml添加两个控件TextView和ImageView
+    
+```
+
+```
+public class FruitAdapter extends RecyclerView.Adapter<FruitAdapter.ViewHolder> {//注意继承对象还有泛型类型
+    // 定义一个水果列表
+    private List<Fruit>mFruitList;
+    // 定义一个ViewHolder类，继承自RecyclerView.ViewHolder
+    static class ViewHolder extends RecyclerView.ViewHolder{
+        // 定义一个ImageView，用于显示水果图片
+        ImageView fruitImage;
+        // 定义一个TextView，用于显示水果名称
+        TextView fruitName;
+        // 构造方法，传入一个View对象
+        public ViewHolder(View view){
+            super(view);
+            // 通过findViewById方法获取ImageView和TextView对象
+            fruitImage=view.findViewById(R.id.fruit_image);
+            fruitName=view.findViewById(R.id.fruit_name);
+        }
+
+    }
+    // 构造方法，传入一个水果列表
+    public FruitAdapter(List<Fruit>fruitList){
+        mFruitList=fruitList;
+    }
+   // 重写onCreateViewHolder方法，用于创建ViewHolder对象
+   @Override
+    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType){
+        // 通过LayoutInflater.from方法获取LayoutInflater对象
+        View view= LayoutInflater.from(parent.getContext()).inflate(R.layout.fruit_item,
+                parent,
+                false);
+        // 创建ViewHolder对象
+        ViewHolder holder=new ViewHolder(view);
+        return holder;
+   }
+   // 重写onBindViewHolder方法，用于绑定数据到ViewHolder对象
+   @Override
+    public void onBindViewHolder(ViewHolder holder, int position){
+        // 获取当前位置的水果对象
+        Fruit fruit=mFruitList.get(position);
+        // 设置ImageView的图片资源
+        holder.fruitImage.setImageResource(fruit.getImageId());
+        // 设置TextView的文本内容
+        holder.fruitName.setText(fruit.getName());
+   }
+   // 重写getItemCount方法，返回水果列表的大小
+   @Override
+    public int getItemCount(){
+        return mFruitList.size();
+   }
+
+}
+```
+
+```
+ // 初始化水果列表
+initFruits();
+  // 获取RecyclerView
+  RecyclerView recyclerView =(RecyclerView)findViewById(R.id.recycler_view);
+  // 设置布局管理器
+  LinearLayoutManager linearLayoutManager=new LinearLayoutManager(this);
+  recyclerView.setLayoutManager(linearLayoutManager);
+  // 创建适配器
+  FruitAdapter adapter=new FruitAdapter(fruitList);
+  // 设置适配器
+  recyclerView.setAdapter(adapter);
+```
+
+
+
+**3.6.2 实现横向滚动和瀑布流布局**
+
+1.在fruit_item中修改
+
+```
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="100dp"//确定宽度
+    android:layout_height="match_parent"
+    android:orientation="vertical"//改为垂直布局
+    >
+    <ImageView
+        android:id="@+id/fruit_image"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"//水平居中
+        />
+    <TextView
+        android:id="@+id/fruit_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="10dp"//文字和图片保持距离
+        />
+```
+
+```
+2.在MainActivity中修改
+RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+layoutManager.setOrientation(LinearLayoutManager.HORIZONTAL);//设置布局管理器的排列方式为水平，默认是纵向排列
+recyclerView.setLayoutManager(layoutManager);
+FruitAdapter adapter = new FruitAdapter(fruitList);
+recyclerView.setAdapter(adapter);
+```
+
+实现网格布局：GridLayoutManager
+
+实现瀑布流布局：StaggeredGridLayoutManager
+
+以瀑布流为例：
+
+1.把fruit_item的布局做一些小修改
+
+2.创建布局管理器
+
+```
+StaggeredGridLayoutManager layoutManager=new StaggeredGridLayoutManager(3,StaggeredGridLayoutManager.VERTICAL);//指明列数和布局排列方向
+```
+
+3.创建新的方法getRandomLengthName（）
+
+```
+private String getRandomLengthName(String name){
+    Random random=new Random();
+    int length=random.nextInt(20)+1;
+    StringBuilder builder=new StringBuilder();
+    for (int i = 0; i < length; i++) {
+        builder.append(name);
+    }
+    return builder.toString();
+}
+```
+
+4.在创建水果对象时调用getRandomLengthName（）；
+
+
+
+**3.6.3 RecyclerView的点击事件**
+
+在fruitAdapter中修改即可
+
+```
+static class ViewHolder extends RecyclerView.ViewHolder{
+   View fruitView;//用来保存子项最外层布局的实例
+    // 定义一个ImageView，用于显示水果图片
+    ImageView fruitImage;
+    // 定义一个TextView，用于显示水果名称
+    TextView fruitName;
+    // 构造方法，传入一个View对象
+    public ViewHolder(View view){
+        super(view);
+        fruitView=view;
+        // 通过findViewById方法获取ImageView和TextView对象
+        fruitImage=view.findViewById(R.id.fruit_image);
+        fruitName=view.findViewById(R.id.fruit_name);
+    }
+```
+
+```
+// 重写onCreateViewHolder方法，用于创建ViewHolder对象
+@Override
+ public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType){
+     // 通过LayoutInflater.from方法获取LayoutInflater对象
+     View view= LayoutInflater.from(parent.getContext()).inflate(R.layout.fruit_item,
+             parent,
+             false);
+     // 创建ViewHolder对象
+     final ViewHolder holder=new ViewHolder(view);
+     //为fruitView注册点击事件
+     holder.fruitView.setOnClickListener(new View.OnClickListener(){
+         @Override
+         public void onClick(View v) {
+             int position=holder.getAdapterPosition();
+             Fruit fruit=mFruitList.get(position);
+             Toast.makeText(v.getContext(),"You Clicked"+fruit.getName(),Toast.LENGTH_SHORT).show();
+
+         }
+     });
+     //为fruitImage注册点击事件
+     holder.fruitImage.setOnClickListener(new View.OnClickListener(){
+         @Override
+         public void onClick(View v) {
+             int position=holder.getAdapterPosition();
+             Fruit fruit=mFruitList.get(position);
+             Toast.makeText(v.getContext(),"You Clicked Image"+fruit.getName(),Toast.LENGTH_SHORT).show();
+         }
+     });
+     return viewHolder；
+     }
+```
+
+由于没有给TextView注册点击事件，因此点击文字时会被最外层布局捕捉到；
+
+
+
+# **3.7 编写界面的最佳实践**
+
+**3.7.1 制作Nine-Patch图片**
+
+注意drawable中同时存在某图片及其9patch图片时，会认为是同一张图片，就会报错
+
+**3.7.2 编写精美的聊天界面**
+
+1.添加依赖，编写主界面
+
+```
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity"
+    android:background="#d8e0e8"
+    android:orientation="vertical"
+    >
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/msg_recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        >
+    <EditText
+        android:id="@+id/input_text"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:hint="Type something here"
+        android:maxLines="2"
+        />
+    <Button
+        android:id="@+id/send"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Send"
+        />
+    </LinearLayout>
+
+</LinearLayout>
+```
+
+2.新定义一个实体类Msg
+
+```
+public class Msg {
+    public static final int TYPE_RECEIVED=0;
+    public static final int TYPE_SEND=1;
+    private String content;
+    private int type;
+    public Msg(String content,int type){
+        this.content=content;
+        this.type=type;
+    }
+    public String getContent(){
+        return  content;
+    }
+    public int getType(){
+        return type;
+    }
+}
+```
+
+3.编写RecyclerView的子项布局msg_item
+
+```
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="10dp"//意味着视图的内容将与视图的边界之间有 10dp 的空间
+    >
+<LinearLayout
+    android:id="@+id/left_layout"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="left"
+    android:background="@drawable/message_left"
+    >
+    <TextView
+        android:id="@+id/left_msg"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_margin="10dp"
+        android:textColor="#fff"
+        />
+</LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/right_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="right"
+        android:background="@drawable/message_right">
+
+        <TextView
+            android:id="@+id/right_msg"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_margin="10dp" />
+
+    </LinearLayout>
+</LinearLayout>
+```
+
+4.创建RecyclerView的适配器类MsgAdapter
+
+```
+public class MsgAdapter extends RecyclerView.Adapter<MsgAdapter.ViewHolder>{
+    //创建数组
+    private List<Msg> mMsgList;
+    //定义内部类
+    static class ViewHolder extends RecyclerView.ViewHolder{
+        LinearLayout leftLayout;
+        LinearLayout rightLayout;
+        TextView leftMsg;
+        TextView rightMsg;
+    public ViewHolder(View view){
+        super(view);
+        leftLayout=(LinearLayout)view.findViewById(R.id.left_layout);
+        rightLayout=(LinearLayout)view.findViewById(R.id.right_layout);
+        leftMsg=(TextView)view.findViewById(R.id.left_msg);
+        rightMsg=(TextView)view.findViewById(R.id.right_msg);
+     }
+    }
+    //MsgAdapter的带参构造
+    public MsgAdapter(List<Msg>msgList){
+        mMsgList=msgList;
+    }
+    //重写三个方法：onCreateViewHolder,onBindViewHolder,getItemCount
+    @Override
+    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType){
+        // 从父视图的上下文中获取LayoutInflater对象，并使用该对象将布局文件R.layout.msg_item填充到父视图中
+        //false表示不把填充后的视图添加到 parent 视图中
+       View view= LayoutInflater.from(parent.getContext()).inflate(R.layout.msg_item,parent,false);
+        return new ViewHolder(view);
+    }
+    @Override
+    public void onBindViewHolder(ViewHolder holder,int position){
+        Msg msg=mMsgList.get(position);
+        //对信息类型的判断
+        if(msg.getType()==Msg.TYPE_RECEIVED){
+            holder.leftLayout.setVisibility(View.VISIBLE);//显示该属性
+            holder.rightLayout.setVisibility(View.GONE);//隐藏该属性
+            holder.leftMsg.setText(msg.getContent());
+        }else{
+            holder.leftLayout.setVisibility(View.GONE);
+            holder.rightLayout.setVisibility(View.VISIBLE);
+            holder.rightMsg.setText(msg.getContent());
+        }
+
+    }
+    @Override
+    public int getItemCount(){
+        return mMsgList.size();
+    }
+
+
+}
+```
+
+5.修改MainActivity中的代码
+
+```
+public class MainActivity extends AppCompatActivity {
+private List<Msg>msgList=new ArrayList<>();
+private EditText inputText;
+private Button send;
+private RecyclerView msgRecyclerView;
+private MsgAdapter adapter;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        initMsgs();
+        //获取实例
+        inputText=(EditText)findViewById(R.id.input_text);
+        send=(Button)findViewById(R.id.send);
+        msgRecyclerView=(RecyclerView)findViewById(R.id.msg_recycler_view);
+       //创建布局管理器
+       LinearLayoutManager layoutManager=new LinearLayoutManager(this);
+        msgRecyclerView.setLayoutManager(layoutManager);
+        // 创建一个MsgAdapter对象，用于将msgList中的数据适配到RecyclerView中
+        adapter=new MsgAdapter(msgList);
+       // 将适配器设置给RecyclerView
+        msgRecyclerView.setAdapter(adapter);
+        send.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v){
+            String content=inputText.getText().toString();
+            //对输入的内容进行非空判断
+            if(!"".equals(content)){
+                Msg msg=new Msg(content,Msg.TYPE_SEND);
+                msgList.add(msg);
+                //notifyItemInserted用于通知adapter当有新消息时刷新RecyclerView的显示
+                //size() 方法返回 msgList 中的项的数量，- 1 表示最后一个位置
+                 adapter.notifyItemInserted(msgList.size()-1);
+                //将RecyclerView定位到最后一行
+                msgRecyclerView.scrollToPosition(msgList.size()-1);
+                //清空输入框中的内容
+                inputText.setText("");
+            }
+
+                }
+            });
+
+    }
+    //用来初始化的几个数据
+    private void initMsgs(){
+        Msg msg1=new Msg("Hello guy.",Msg.TYPE_RECEIVED);
+        msgList.add(msg1);
+        Msg msg2=new Msg("Hello. Who is that?",Msg.TYPE_SEND);
+        msgList.add(msg2);
+        Msg msg3=new Msg("This is Tom.Nice talking to you",Msg.TYPE_RECEIVED);
+        msgList.add(msg3);
+    }
+}
+```
+
+
+
+## **4.1碎片是什么**
+
+1.碎片（Fragment）是一种可以嵌入在活动中的UI片段，能让程序更合理充分的利用大屏幕空间
+
+类似于一个迷你型的活动
+
+## **4.2碎片的使用方式**
+
+**4.2.1 碎片的简单用法**
+
+1.分别新建左右碎片的布局文件
+
+2.分别新建LeftFragment和RightFragment类继承自Fragment（导包import androidx.fragment.app.Fragment;）
+
+ 重写onCreateView方法
+
+```
+//以LeftFragment为例
+// 重写onCreateView方法，用于创建Fragment的视图
+@Override
+public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState){
+    // 使用inflater将left_fragment.xml布局文件转换为View对象，container是父视图，false表示不将这个View添加到父视图中，而是由调用者来添加。
+    View view=inflater.inflate(R.layout.left_fragment,container,false);
+    // 返回View对象
+    return view;
+}
+```
+
+3.在主布局中添加碎片
+
+```
+<fragment
+    android:id="@+id/left_fragment"
+    android:name="com.example.fragmenttest.LeftFragment"//要显式指明要添加的碎片类名，要带上包名
+    android:layout_width="0dp"
+    android:layout_height="match_parent"
+    android:layout_weight="1" />
+
+<fragment
+    android:id="@+id/right_fragment"
+    android:name="com.example.fragmenttest.RightFragment"
+    android:layout_width="0dp"
+    android:layout_height="match_parent"
+    android:layout_weight="1" />
+```
+
+
+
+**4.2.2 动态添加碎片**
+
+1.新建another_right_fragment布局文件
+
+2.新建AnotherRightFragment类继承自Fragment， 重写onCreateView方法
+
+3.修改主布局，把右布局改为可动态添加的碎片
+
+```
+//采用帧布局，由于只需要在布局中放入一个碎片，使用不需要定位
+<FrameLayout
+    android:id="@+id/right_layout"
+    android:layout_width="0dp"
+    android:layout_height="match_parent"
+    android:layout_weight="1"
+    >
+    </FrameLayout>
+```
+
+4.在主活动中，先定义一个方法replaceFragment()用来动态添加碎片
+
+```
+private void replaceFragment(Fragment fragment){
+    //直接用getSupportFragMentManager（）获取碎片管理器
+    FragmentManager fragmentManager=getSupportFragmentManager();
+    //用fragmentManager.beginTransaction()开启事务
+    FragmentTransaction transaction=fragmentManager.beginTransaction();
+    //replace（）用于替换指定布局中的Fragment。第一个参数是要被替换的布局的ID，第二个参数是要换进去的Fragment实例。在这个例子中，R.id.right_layout是一个布局ID，表示要替换的布局位置，fragment是要替换进去的Fragment实例。
+    transaction.replace(R.id.right_layout,fragment);
+   //提交事务
+   transaction.commit();
+}
+```
+
+5.在onCreate中可以用
+
+replaceFragment(new RightFragment());
+
+先把右碎片初始化为先前的右碎片，通过点击事件再次调用replaceFragment(new AnotherRightFragment());把右碎片进行替换
+
+
+
+**4.2.3 在碎片中模拟返回栈**
+
+在提交事务前加上：transaction.addToBackStack(null);//可以将一个事物添加到返回栈中
+
+则点击Back键时，不会直接退出程序
+
+
+
+**4.2.4 碎片和活动之间进行通信**
+
+*1.在活动中调用碎片的方法：*
+RightFragment  rightFragment=(RightFragment) getSupportFragmentManager().findFragmentById(R.id.right_fragment);
+这样就获得了相应碎片的实例，就可以用实例去调用碎片里的方法了
+
+*2.在碎片中调用活动的方法：*
+MainActivity activity=(MainActivity) getActicity(); //getActivity()可以获得一个Context对象
+可以获得活动的实例
+
+*3.碎片1调用碎片2中的方法：*
+先在活动中定义一个方法，{创建碎片2的实例，调用碎片2的方法}；
+再在碎片1中创建活动的实例，调用刚刚在活动中定义的方法
+
+
+
+## **4.3 碎片的生命周期**
+
+**4.3.1 碎片的状态和回调**
+
+*1.运行状态：*
+碎片可见且与他关联的活动处于运行状态，则该碎片也处于运行状态
+
+*2.暂停状态*
+当活动进入暂停状态，与他相关联的碎片也会进入暂停状态
+
+*3.停止状态*
+*活动进入停止状态，与他相关联的碎片也会进入停止状态
+*或者通过FragmentTransaction调用remove(),replace()方法将碎片从活动中移除，在事务提交前调用addToBackStack()方法，碎片会进入到停止状态
+
+*4.销毁状态*
+*活动进入销毁状态，与他相关联的碎片也会进入销毁状态
+*或者通过FragmentTransaction调用remove(),replace()方法将碎片从活动中移除，在事务提交前没有调用addToBackStack()方法，碎片会进入到销毁状态
+
+活动有的回调方法碎片几乎都有，碎片还有几种附加的回调方法
+
+![image-20250320223114721](C:\Users\yyz20\AppData\Roaming\Typora\typora-user-images\image-20250320223114721.png)
+
+![image-20250320223243491](C:\Users\yyz20\AppData\Roaming\Typora\typora-user-images\image-20250320223243491.png)
+
+
+
+**4.3.2 体验碎片的生命周期**
+
+因为进入停止状态的碎片可能在系统内存不足时被回收，所以在碎片中也可以通过onSaveInstanceState()来临时存储数据，然后在onCreate(),onCreateView()或者onActicityCreate()中重新得到，因为他们都含有一个Bundle类型的savedInstanceState 参数
+
+   **临时数据的存储**
+
+```
+@Override
+// 重写onSaveInstanceState方法，用于保存当前Activity的状态
+public void onSaveInstanceState(Bundle outState){
+    super.onSaveInstanceState(outState);
+    // 将临时数据保存到Bundle中
+    String tempData="Something you just type";
+    outState.putString("data_key",tempData);
+
+}
+```
+
+在onCreate 方法中恢复内容
+
+```
+if(savedInstanceState!=null){
+    String tempData=savedInstanceState.getString("data_key");
+    
+}
+```
+
+ 
+
+## **4.4 动态加载布局的技巧**
+
+**4.4.1 使用限定符**
+
+1.新建的layout-large要在project下才能看到，在layout-large下新建的activity_main.xml文件记得要给注册id为main，否则onCreate中用ViewCompat类和WindowInsetsCompat类来处理窗口的边距（Insets）时会找不到视图的id,出现空指针的情况
+
+2.large就是限定符，当设备被认为时large的设备就会自动加载layout-large文件夹下的布局
+
+![image-20250321000514357](C:\Users\yyz20\AppData\Roaming\Typora\typora-user-images\image-20250321000514357.png)
+
+![image-20250321000532297](C:\Users\yyz20\AppData\Roaming\Typora\typora-user-images\image-20250321000532297.png)
+
+​                                                                                                                                                                                                                                   
+
+**4.4.2 使用最小宽度限定符**（Smallest-widthQualifier）
+  在res目录下新建文件夹：layout-sw600dp
+当程序运行在屏幕宽度大于等于600dp的设备上时，会加载layout-sw600dp中的布局，如果小于600dp,则会默认运行layout/activity_main中的布局
+
+
+
+## **4.5 碎片的最佳实践——一个简易版的新闻应用**
+
+**1.新建实体类News：**
+两个成员变量title，content，及其get和set方法
+
+**2.新建news_content_frag布局->新建NewsContentFragment类**
+
+```java
+//使用相对布局
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <LinearLayout
+      android:id="@+id/visibility_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:visibility="invisible"
+        >
+        <TextView
+            android:id="@+id/news_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:padding="10dp"
+            android:textSize="20sp"
+            />
+        //通过设置View的宽度或者高度，把View变成一条细线达到分割的效果
+                
+                <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"//水平细线
+            android:background="#000"//设置为黑色
+            />
+        <TextView
+            android:id="@+id/news_content"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:padding="15dp"//给控件周围补白
+            android:textSize="18sp"
+            />
+</LinearLayout>
+    <View
+        android:layout_width="1dp"//竖直细线
+        android:layout_height="match_parent"
+        android:background="#000"
+        android:layout_alignParentLeft="true"//位于父布局的左侧
+
+        />
+</RelativeLayout>
+```
+
+```java
+public class NewsContentFragment extends Fragment {
+    private View view;
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState){
+        view=inflater.inflate(R.layout.news_content_frag,container,false);
+        return view;
+    }
+    //用refresh方法来更新显示的内容
+    public void refresh(String newsTitle,String newsContent){
+        // 获取visibility_layout布局
+        View visibilityLayout=view.findViewById(R.id.visibility_layout);
+        // 设置visibility_layout布局可见
+        visibilityLayout.setVisibility(View.VISIBLE);
+        // 获取news_title文本框
+        TextView newsTitleText=(TextView)view.findViewById(R.id.news_title);
+        // 获取news_content文本框
+        TextView newsContentText=(TextView)view.findViewById(R.id.news_content);
+        // 设置news_title文本框内容
+        newsTitleText.setText(newsTitle);
+        // 设置news_content文本框内容
+        newsContentText.setText(newsContent);
+    }
+
+}
+```
+
+**3.新建NewsContentActivity活动->对应布局名改为news_content,供单页模式使用**
+
+```java
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".NewsContentActivity"
+    android:orientation="vertical"
+    >
+    //直接引入NewsContentFragment，体现代码的复用性
+<fragment
+    android:id="@+id/news_content_fragment"
+    android:name="com.example.fragmentbestpractice.NewsContentFragment"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    />
+</LinearLayout>
+```
+
+```java
+public class NewsContentActivity extends AppCompatActivity {
+//当其他人想要启动这个活动时，可以直接看出需要传给这个活动的参数
+public static void actionStart(Context context,String newsTitle,String newsContent){
+    Intent intent=new Intent(context,NewsContentActivity.class);
+    intent.putExtra("news_title",newsTitle);
+    intent.putExtra("news_content",newsContent);
+    context.startActivity(intent);
+}
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        EdgeToEdge.enable(this);
+        setContentView(R.layout.news_content);
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
+        //接收上一个活动传来的数据
+        String newsTitle=getIntent().getStringExtra("news_title");
+        String newsContent=getIntent().getStringExtra("news_content");
+       //获取新闻内容的Fragment
+        NewsContentFragment newsContentFragment=(NewsContentFragment)getSupportFragmentManager()
+                .findFragmentById(R.id.news_content_fragment);
+       // 刷新新闻内容的Fragment
+        newsContentFragment.refresh(newsTitle,newsContent);
+    }
+}
+```
+
+**4.新建news_title_frag布局->(要用到RecyclerView->新建RecyclerView的子项布局news_item)->新建NewsTitleFragment类**
+
+```
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    >
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/news_title_recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        />
+
+</LinearLayout>
+```
+
+```java
+//不要写<LinearLayout....>否则一个子项就会占了一页内容
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/news_title"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:maxLines="1"//这个TextView只能单行显示
+    android:ellipsize="end"//当文本内容超出控件宽度时，采用的缩略方式，这里表示在文本尾部缩略，如果没用这个缩略，那么后面超出的部分就不显示
+    android:textSize="18sp"
+   //给控件周围补白
+    android:paddingLeft="10dp"
+    android:paddingRight="10dp"
+    android:paddingTop="15dp"
+    android:paddingBottom="15dp"
+    />
+```
+
+```java
+public class NewsTitleFragment extends Fragment {
+    private boolean isTwoPane;
+//重新onCreateView方法
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.news_title_frag, container, false);
+        //向RecyclerView中填充数据
+        RecyclerView newsTitleRecyclerView = (RecyclerView) view.findViewById
+                (R.id.news_title_recycler_view);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(getActivity());
+        newsTitleRecyclerView.setLayoutManager(layoutManager);
+        NewsAdapter adapter = new NewsAdapter(getNews());//通过getNews获得可以传入适配器的数组
+        newsTitleRecyclerView.setAdapter(adapter);
+       
+        return view;
+    }
+    
+   //重写onActivityCreated方法
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        //根据能否找到news_content_layout来给isTwoPane赋值
+        //那就决定了在layout-sw600dp中要出现news_content_layout的id,下面把他给到FrameLayout
+        if (getActivity().findViewById(R.id.news_content_layout) != null) {
+            isTwoPane = true;//是双页模式
+        } else {
+            isTwoPane = false;
+        }
+    }
+   
+    // 向RecyclerView中填充数据用到的getNews方法
+    private List<News> getNews() {
+        List<News> newsList = new ArrayList<>();
+        for (int i = 0; i < 50; i++) {
+            News news = new News();
+            news.setTitle("This is news title " + i);
+            news.setContent(getRandomLengthContent("This is news content " + i + "."));
+            newsList.add(news);
+        }
+        return newsList;
+    }
+
+    // 向RecyclerView中填充数据用到的getRandomLengthContent方法
+    private String getRandomLengthContent(String content) {
+        Random random = new Random();
+        int length = random.nextInt(20) + 1;
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < length; i++) {
+            builder.append(content);
+        }
+        return builder.toString();
+    }
+
+
+//定义一个内部类NewsAdapter作为RecyclerView的适配器（也可以单独拿出来当一个类）
+    class NewsAdapter extends RecyclerView.Adapter<NewsAdapter.ViewHolder> {
+        private List<News> mNewsList;
+// 定义一个ViewHolder类，用于缓存视图
+        class ViewHolder extends RecyclerView.ViewHolder {
+            TextView newsTitleText;
+// 构造方法，传入一个View对象
+            public ViewHolder(View view) {
+                super(view);
+                newsTitleText = (TextView) view.findViewById(R.id.news_title);
+            }
+        }
+ // 构造方法，传入一个新闻列表
+        public NewsAdapter(List<News> newsList) {
+            mNewsList = newsList;
+        }
+//重写onCreateViewHolder方法
+        @Override
+        public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            View view = LayoutInflater.from(parent.getContext()).
+                    inflate(R.layout.news_item, parent, false);
+            final ViewHolder holder = new ViewHolder(view);
+            //注册了一个点击事件
+            view.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) 
+                    //获取到News的实例
+                    News news = mNewsList.get(holder.getAdapterPosition());
+                    if (isTwoPane) {
+                        //如果是双页模式，就刷新新闻内容碎片的数据
+                        NewsContentFragment newsContentFragment = (NewsContentFragment) getFragmentManager()
+                                .findFragmentById(R.id.news_content_fragment);
+                        newsContentFragment.refresh(news.getTitle(), news.getContent());
+                    } else {
+                        //如果是单页模式，就启动新的活动去显示新闻内容
+                        NewsContentActivity.actionStart(getActivity(), news.getTitle(), news.getContent());
+
+                    }
+                }
+            });
+            return holder;
+        }
+//重写onBindViewHolder方法
+        @Override
+        public void onBindViewHolder(ViewHolder holder, int position) {
+            News news = mNewsList.get(position);
+            //// 将新闻标题设置到ViewHolder中的TextView中
+            holder.newsTitleText.setText(news.getTitle());
+        }
+//重写getItemCount方法
+        @Override
+        public int getItemCount() {
+            return mNewsList.size();
+        }
+    }
+
+
+}
+```
+
+**5.在layout/activity_main中放入NewsTitleFragment的碎片**
+
+```java
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/news_title_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+<fragment
+    android:id="@+id/news_title_fragment"
+    android:name="com.example.fragmentbestpractice.NewsTitleFragment"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    />
+
+</FrameLayout>
+```
+
+
+
+6.新建layout-sw600dp/activity_main，引入NewsTitleFragment的碎片和NewsContentFragment的碎片
+
+```kotlin
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+android:id="@+id/news_title_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    >
+    <fragment
+        android:id="@+id/news_title_fragment"
+        android:name="com.example.fragmentbestpractice.NewsTitleFragment"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        />
+    <FrameLayout
+        android:id="@+id/news_content_layout"//这就是isTwoPane判断的根据
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="3"
+        >
+        <fragment
+            android:id="@+id/news_content_fragment"
+            android:name="com.example.fragmentbestpractice.NewsContentFragment"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+
+            />
+    </FrameLayout>
+
+</LinearLayout>
+```
+
+**补充：新版的活动中有**
+
+```java
+setContentView(R.layout.activity_main);
+// 设置news_title_layout的WindowInsets监听器
+//要保证上面加载的布局中的id和下面findViewById(R.id.news_title_layout)中的id匹配上
+ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.news_title_layout), (v, insets) -> {
+    // 获取系统栏的Insets
+    Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+    // 设置news_title_layout的Padding
+    v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+    // 返回Insets
+    return insets;
+});
+```
