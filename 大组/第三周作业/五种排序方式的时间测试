@@ -1,0 +1,147 @@
+package com.qg;
+
+import java.util.Random;
+
+public class TestTime {
+
+        public static void main(String[] args) {
+            int[] sizes = {10000, 50000, 200000};
+            System.out.println("插入排序：insertSort");
+            for (int size : sizes) {
+                int[] array = generateRandomArray(size);
+                long startTime = System.currentTimeMillis();
+                SortUtils.insertSort(array);
+                long endTime = System.currentTimeMillis();
+
+                System.out.println("Size: " + size + ", Time: " + (endTime - startTime) + "ms");
+
+            } System.out.println("-------------------------------------");
+            System.out.println("归并排序：mergeSort");
+            for (int size : sizes) {
+                int[] array = generateRandomArray(size);
+                long startTime = System.currentTimeMillis();
+                SortUtils.mergeSort(array);
+                long endTime = System.currentTimeMillis();
+
+                System.out.println("Size: " + size + ", Time: " + (endTime - startTime) + "ms");
+
+            } System.out.println("-------------------------------------");
+            System.out.println("快速排序：quickSort");
+            for (int size : sizes) {
+                int[] array = generateRandomArray(size);
+                long startTime = System.currentTimeMillis();
+                SortUtils.quickSort(array);
+                long endTime = System.currentTimeMillis();
+
+                System.out.println("Size: " + size + ", Time: " + (endTime - startTime) + "ms");
+
+            } System.out.println("-------------------------------------");
+            System.out.println("计数排序：countSort");
+            for (int size : sizes) {
+                int[] array = generateRandomArray(size);
+                long startTime = System.currentTimeMillis();
+                SortUtils.countSort(array);
+                long endTime = System.currentTimeMillis();
+
+                System.out.println("Size: " + size + ", Time: " + (endTime - startTime) + "ms");
+
+            } System.out.println("-------------------------------------");
+            System.out.println("基数计数排序radixSort");
+            for (int size : sizes) {
+                int[] array = generateRandomArray(size);
+                long startTime = System.currentTimeMillis();
+                SortUtils.radixSort(array);
+                long endTime = System.currentTimeMillis();
+
+                System.out.println("Size: " + size + ", Time: " + (endTime - startTime) + "ms");
+
+            } System.out.println("-------------------------------------");
+        }
+
+        private static int[] generateRandomArray(int size) {
+            int[] array = new int[size];
+            Random random = new Random();
+            for (int i = 0; i < size; i++) {
+                array[i] = random.nextInt(size);
+            }
+            return array;
+        }
+    }
+
+
+package com.qg;
+
+import java.util.Random;
+
+public class TestTime2 {
+
+        public static void main(String[] args) {
+            int size = 100;
+            int times = 100000;
+            long total = 0;
+            for (int i = 0; i < times; i++) {
+                int[] array = generateRandomArray(size);
+                long startTime = System.currentTimeMillis();
+                SortUtils.insertSort(array);
+                long endTime = System.currentTimeMillis();
+                total += endTime - startTime;
+            }
+            System.out.println("----------------------------------------");
+            System.out.println("insertSort");
+            System.out.println("Size: " + size + ", Times: " + times + ", Average Time: " + (total / times) + "ms");
+
+            for (int i = 0; i < times; i++) {
+                int[] array = generateRandomArray(size);
+                long startTime = System.currentTimeMillis();
+                SortUtils.mergeSort(array);
+                long endTime = System.currentTimeMillis();
+                total += endTime - startTime;
+            }
+            System.out.println("----------------------------------------");
+            System.out.println("mergeSort");
+            System.out.println("Size: " + size + ", Times: " + times + ", Average Time: " + (total / times) + "ms");
+
+            for (int i = 0; i < times; i++) {
+                int[] array = generateRandomArray(size);
+                long startTime = System.currentTimeMillis();
+                SortUtils.quickSort(array);
+                long endTime = System.currentTimeMillis();
+                total += endTime - startTime;
+            }
+            System.out.println("----------------------------------------");
+            System.out.println("quickSort");
+            System.out.println("Size: " + size + ", Times: " + times + ", Average Time: " + (total / times) + "ms");
+
+            for (int i = 0; i < times; i++) {
+                int[] array = generateRandomArray(size);
+                long startTime = System.currentTimeMillis();
+                SortUtils.countSort(array);
+                long endTime = System.currentTimeMillis();
+                total += endTime - startTime;
+            }
+            System.out.println("----------------------------------------");
+            System.out.println("countSort");
+            System.out.println("Size: " + size + ", Times: " + times + ", Average Time: " + (total / times) + "ms");
+
+            for (int i = 0; i < times; i++) {
+                int[] array = generateRandomArray(size);
+                long startTime = System.currentTimeMillis();
+                SortUtils.radixSort(array);
+                long endTime = System.currentTimeMillis();
+                total += endTime - startTime;
+            }
+            System.out.println("----------------------------------------");
+            System.out.println("radixSort");
+            System.out.println("Size: " + size + ", Times: " + times + ", Average Time: " + (total / times) + "ms");
+        }
+
+        private static int[] generateRandomArray(int size) {
+            int[] array = new int[size];
+            Random random = new Random();
+            for (int i = 0; i < size; i++) {
+                array[i] = random.nextInt(size);
+            }
+            return array;
+        }
+}
+
