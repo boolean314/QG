@@ -1,0 +1,57 @@
+package com.qg;
+
+import java.util.Random;
+
+public class Apply1 {
+    public static void main(String[] args) {
+        Random random = new Random();
+        int N= random.nextInt(7)+4;
+        int[]arr=new int[N];
+
+        arr[0] = 1;
+        arr[1] = 2;
+        arr[2]=0;
+
+        // 剩余的位置随机填充 0, 1, 2
+        for (int i = 3; i < N; i++) {
+            arr[i] = random.nextInt(3); // 0, 1, 或 2
+        }
+
+        // 打乱数组顺序（避免总是 1 和 2 在前）
+        shuffleArray(arr);
+//使用插入排序
+        SortUtils.insertSort(arr);
+for (int i : arr) {
+    System.out.print(i + " ");
+}
+
+    }
+
+    // 打乱数组顺序
+    public static void shuffleArray(int[] arr) {
+        Random random = new Random();
+        for (int i = arr.length - 1; i > 0; i--) {
+            int j = random.nextInt(i + 1);
+            // 交换 arr[i] 和 arr[j]
+            int temp = arr[i];
+            arr[i] = arr[j];
+            arr[j] = temp;
+        }
+
+
+
+        package com.qg;
+
+public class Apply2 {
+    public static void main(String[] args) {
+        int[]arr= {5, 2, 8, 4, 3, 7, 6};
+        //通过快速排序找到第三小的数
+        SortUtils.quickSort(arr);
+        System.out.println("第三小的数是："+arr[2]);
+
+    }
+}
+
+
+    }
+}
