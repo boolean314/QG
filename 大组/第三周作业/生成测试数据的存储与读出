@@ -1,0 +1,72 @@
+package com.qg;
+
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Random;
+
+public class makeNumber {
+
+    public static void main(String[] args) {
+        int[] arr = new int[10];
+        Random r = new Random();
+        for (int i = 0; i < arr.length; i++) {
+            arr[i] = r.nextInt(100);
+        }
+
+        try (FileOutputStream fos = new FileOutputStream("test.txt")) {
+            for (int num : arr) {
+                fos.write((num + "\n").getBytes());  // 写入字符串+换行
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+
+    }
+
+
+package com.qg;
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+public class getNumber {
+    public static void main(String[] args) {
+        String filePath = "test.txt"; // 替换为你的文件路径
+        int[] arr = readIntArrayFromTextFile(filePath);
+
+       //调用SortUtils的排序函数进行排序
+        SortUtils.insertSort(arr);
+        for (int i : arr) {
+            System.out.print(i+" ");
+        }
+    }
+
+    /**
+     * 从文本文件（每行一个整数）读取数据到整型数组
+     */
+    public static int[] readIntArrayFromTextFile(String filePath) {
+        List<Integer> list = new ArrayList<>();
+
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                list.add(Integer.parseInt(line.trim())); // 去除空格并转为整数
+            }
+        } catch (IOException e) {
+            System.err.println("读取文件失败: " + e.getMessage());
+            return new int[0]; // 返回空数组
+        } // 转换为int[]
+        int[] arr = new int[list.size()];
+        for (int i = 0; i < list.size(); i++) {
+            arr[i] = list.get(i);
+        }
+        return arr;
+    }
+}
+
