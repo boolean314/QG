@@ -1,0 +1,880 @@
+# **五，六章**
+
+## **5.1 广播机制简介**
+
+​	广播（Broadcast）是一种用于在应用程序组件之间传递消息的机制。广播允许应用程序或系统发送和接收全局事件的通知。
+分类：标准广播，有序广播
+
+标准广播（异步执行）：广播发出后，几乎所有的广播接收器是在同一时间收到广播信息，没有先后顺序，**效率高**，但也意味着**无法被截断**
+有序广播（同步执行）：优先级高的广播接收器先收到，前面的接收器可以截断广播
+
+## **5.2 接收系统广播**
+
+**5.2.1 动态注册监听网络变化**
+在代码中注册
+
+```java
+public class MainActivity extends AppCompatActivity {
+private IntentFilter intentFilter;//过滤器
+private NetworkChangeReceiver networkChangeReceiver;//内部类的对象
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        EdgeToEdge.enable(this);
+        setContentView(R.layout.activity_main);
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
+        intentFilter = new IntentFilter();
+         // 添加网络连接状态改变的action，想要监听什么广播，就在过滤器添加相应的action
+        intentFilter.addAction("android.net.conn.CONNECTIVITY_CHANGE");
+        networkChangeReceiver = new NetworkChangeReceiver();
+        //用registerReceive方法进行注册
+        registerReceiver(networkChangeReceiver,intentFilter);
+    }
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(networkChangeReceiver);
+    }
+    
+    //新建一个内部类NetworkChangeRecevier,要继承自BroadcastReceiver
+    class NetworkChangeReceiver extends BroadcastReceiver {
+       //重写onReceive方法
+        @Override
+        public void onReceive(Context context, Intent intent) {
+           //通过getSystemService获得ConnectivityMangaer的实例，ConnectivityManager是系统服务类，专门管理网络连接
+            //这一步之前要在AndroidManifest声明权限，不然会报错
+            //<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+            ConnectivityManager connectivityManager=(ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
+            //调用ConnectivityManager的getActivityNetworkInfo()可以得到NetworkInfo的实例
+           NetworkInfo networkInfo= connectivityManager.getActiveNetworkInfo();
+           if(networkInfo!=null&&networkInfo.isAvailable()){
+               Toast.makeText(context,"network is available",Toast.LENGTH_SHORT).show();
+           }else{
+               Toast.makeText(context,"network is unavailable",Toast.LENGTH_SHORT).show();
+           }
+        }
+    }
+}
+```
+
+最后要记得，动态注册的广播接收器一定要取消注册，这里我们通过destroy方法中调用unregisterReceiver(networkChangeReceiver)实现
+
+
+
+**5.2.2 静态注册实现开机启动**
+1.动态注册比较灵活，但是缺点是必须在程序启动后才能接收到广播
+
+2.从 Android 8.0（API 26）开始，系统对隐式广播（如 `BOOT_COMPLETED`）施加了限制。如果你的应用目标 SDK 版本是 26 或更高，静态注册的广播接收器可能无法接收到某些隐式广播。
+
+  *1.新建广播接收器*
+
+```java
+public class BootCompleteReceiver extends BroadcastReceiver {
+
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        Toast.makeText(context, "Boot complete", Toast.LENGTH_LONG).show();
+    }
+}
+```
+
+ *2.在AndroidManifest中的<recevier>中添加action，还要声明权限*
+
+```java
+<intent-filter>
+    <action android:name="android.intent.action.BOOT_COMPLETED" />
+</intent-filter>
+```
+
+```java
+<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+```
+
+不要在onReceive（）中添加太多逻辑，因为在广播接收器内是不允许开启线程的
+
+
+
+## **5.3 发送自定义广播**
+
+**5.3.1 发送标准广播**
+ *1.创建一个静态广播接收器类*
+
+```
+public class MyBroadcastReceiver extends BroadcastReceiver {
+
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        Toast.makeText(context,"received in MyBroadcastReceiver",Toast.LENGTH_SHORT).show();
+    }
+}
+```
+
+ *2.在AndroidManifest中添加action,即要监听的广播的值*
+
+```
+<receiver
+    android:name=".MyBroadcastReceiver"
+    android:enabled="true"
+    android:exported="true">
+        <intent-filter>
+            <action android:name="com.example.broadcasttest.MY_BROADCAST"/>
+        </intent-filter>
+</receiver>
+```
+
+ *3.在MainActivity中通过点击button,发送广播*
+
+```java
+ button=(Button)findViewById(R.id.button);
+        initListener();
+
+    }
+    private void initListener() {
+        button.setOnClickListener(this::onClickButton);
+    }
+    private void onClickButton(View  view){
+    //传入要发送广播的值，要与接收器中接收的值一致
+        Intent intent=new Intent("com.example.broadcasttest.MY_BROADCAST");
+        // 设置广播接收器的组件名称，即包名和类名
+        //安卓8.0后的版本，自定义静态广播需要加上这句才能执行。动态注册则不需要
+        intent.setComponent(new  ComponentName(getPackageName(),"com.example.broadcasttest.MyBroadcastReceiver"));
+        // 发送广播
+        sendBroadcast(intent);
+    }
+```
+
+**5.3.2 发送有序广播**
+
+广播是可以跨进程的我们在应用程序内发出的广播，其他的应用程序也是可以接收到的
+
+1.把sendBroadcast(intent);改为sendOrderedBroadcast(intent,null)//第二个参数是与权限相关的字符串
+
+2.设置优先级
+ <intent-filter android:priority="100">
+            <action android:name="com.example.broadcasttest.MY_BROADCAST"/>
+        </intent-filter>
+
+3.在接收器中添加abortBroadcast();表示截断广播
+public class MyBroadcastReceiver extends BroadcastReceiver {
+
+```java
+@Override
+public void onReceive(Context context, Intent intent) {
+    Toast.makeText(context,"received in MyBroadcastReceiver",Toast.LENGTH_SHORT).show();
+    abortBroadcast();
+}
+```
+}
+
+## **5.4 使用本地广播**
+
+  前面发送和接收的广播属于系统全局广播，即发出的广播可以被任何应用接收到，也可以接收到来自其他任何应用的广播，存在安全性问题，因此引入本地广播机制（比系统全局广播更高效），主要是通过一个LocalBroadcastManager来对广播进行管理。
+
+代码和动态注册广播接收器以及发送广播的代码基本上一样
+
+*1.新建内部类LocalReceiver*
+
+```java
+class LocalReceiver extends BroadcastReceiver{
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        Toast.makeText(context,"received local broadcast",Toast.LENGTH_SHORT).show();
+    }
+}
+```
+
+*2.获取LocalBroadcastManager的实例*
+
+```java
+private LocalBroadcastManager localBroadcastManager;
+localBroadcastManager=LocalBroadcastManager.getInstance(this); 	
+```
+
+*3.通过点击事件来设置要发送的广播的值*
+
+```java
+private void initListener() {
+    button.setOnClickListener(this::onClickButton);
+}
+private void onClickButton(View  view){
+    Intent intent=new Intent("com.example.broadcasttest.LOCAL_BROADCAST");
+//发送本地广播
+    localBroadcastManager.sendBroadcast(intent);
+
+}
+```
+
+*4.创建IntentFilter对象，添加要监听广播的值，并注册本地广播监听器*
+
+```java
+ private IntentFilter intentFilter;
+ private LocalReceiver localReceiver;
+intentFilter=new IntentFilter();
+intentFilter.addAction("com.example.broadcasttest.LOCAL_BROADCAST");
+localReceiver=new LocalReceiver();
+localBroadcastManager.registerReceiver(localReceiver,intentFilter);//注册本地广播监听器
+```
+
+*5.重写onDestroy方法*
+
+```java
+@Override
+protected void onDestroy() {
+    super.onDestroy();
+    localBroadcastManager.unregisterReceiver(localReceiver);
+}
+```
+
+
+
+## **5.5 广播的最佳实践——实现强制下线功能**
+
+*1.创建ActivityCollector和BaseActivity类，用于关闭所有活动*
+
+*2.新建LoginActivity及相应的布局文件*
+
+```java
+public class LoginActivity extends BaseActivity implements View.OnClickListener {
+private EditText accountEdit;
+private EditText passwordEdit;
+private Button login;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        EdgeToEdge.enable(this);
+        setContentView(R.layout.activity_login);
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
+        accountEdit = findViewById(R.id.account);
+        passwordEdit = findViewById(R.id.password);
+        login = findViewById(R.id.login);
+        login.setOnClickListener(this);
+    }
+    @Override
+    public void onClick(View v) {
+    //模拟简单的登录功能
+        String account=accountEdit.getText().toString();
+        String password=passwordEdit.getText().toString();
+        if(account.equals("admin")&& password.equals("123456")){
+            //登录成功跳转MainActivity
+            Intent intent=new Intent(LoginActivity.this,MainActivity.class);
+            startActivity(intent);
+            //确保用户在成功登录后不能再次返回到登录界面。
+            finish();
+        }
+        else{
+            Toast.makeText(LoginActivity.this,"account or password is invalid",Toast.LENGTH_SHORT).show();
+        }
+    }
+}
+```
+
+*3.在MainActivity设置点击事件，用于发送广播*
+
+```
+@Override
+public void onClick(View v){
+    Intent intent=new Intent("com.example.broadcastbestpractice.FORCE_OFFLINE");
+   sendBroadcast(intent);
+}
+```
+
+*4.在BaseActivity中动态注册广播接收器（因为如果是静态注册是没有办法在onReceive方法中弹出UI控件）；*
+
+```java
+public class BaseActivity extends AppCompatActivity {
+    private ForceOfflineReceiver receiver;
+    @Override
+    protected void onCreate(Bundle saveInstanceState){
+        super.onCreate(saveInstanceState);
+        ActivityCollector.addActivity(this);
+    }
+    @Override
+    protected void onDestroy(){
+        super.onDestroy();
+        ActivityCollector.removeActivity(this);
+    }
+    
+    @Override
+    protected void onResume(){
+        super.onResume();
+        //一般是在onCreate中注册广播接收器，但是这里我们只需要处于栈顶的的活动接收到这条广播
+        IntentFilter intentFilter=new IntentFilter();
+        intentFilter.addAction("com.example.broadcastbestpractice.FORCE_OFFLINE");
+        receiver=new ForceOfflineReceiver();
+        registerReceiver(receiver,intentFilter);
+
+    }
+    @Override
+    protected void onPause(){
+        super.onPause();
+        //当一个活动失去栈顶位置时就取消广播接收器的注册
+        if(receiver!=null){
+            unregisterReceiver(receiver);
+            receiver=null;
+        }
+    }
+
+//定义一个广播接收器类
+    class ForceOfflineReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            AlertDialog.Builder builder= new AlertDialog.Builder(context);
+            builder.setTitle("Warning");
+            builder.setMessage("You are forced to be offline. Please login again.");
+            builder.setCancelable(false);//设置对话框不能被取消
+            builder.setPositiveButton("Ok",new DialogInterface.OnClickListener(){
+            @Override
+                public void onClick(DialogInterface dialog, int which){
+                ActivityCollector.finishAll();
+                Intent i=new Intent(context,LoginActivity.class);
+                context.startActivity(i);
+            }
+        }
+            );
+            builder.show();//容易漏掉
+}
+
+}}
+```
+
+*5.在AndroidManifest中把LoginActivity设置为主活动*
+
+
+
+## **5.6 Git时间——初始版本控制工具**
+
+*1.配置身份：去掉后面的姓名邮件再输入可以查看是否配置成功*
+  git config --global user.name "yyz"
+  git config --global user.email "2076898599@qq.com"
+
+*2.给某个项目新建代码仓库：*
+  先进入该项目的目录: （已进入D盘）cd AndroidStudioProjects/BroadcastBestPractice
+  git init；
+  创建完成后，会在该目录下生成隐藏的.git文件用来记录本地所有Git操作，可以通过ls -al 来查看
+  想要删除本地仓库也只要删除这个文件就行
+
+*3.提交本地代码*
+  **add把代码添加进来**
+添加文件（夹）：git add 文件（夹）名
+添加当前目录所有文件：git add .
+
+  **commit真正执行提交操作**
+git commit -m "First commit"
+一定要通过-m参数来描述提交信息，否则提交是不合法的
+
+**注意很多地方不能漏掉空格**
+
+
+
+## **6.1 持久化技术简介**
+
+1.持久化技术提供了一种机制能让数据在顺时状态和持久状态之间进行转换
+
+2.Android系统中主要提供了三种实现数据持久化功能：
+文件存储，SharedPreferences存储，数据库存储
+相比于SD卡存储，前面几种更加简单安全
+
+
+
+## **6.2 文件存储**
+
+**6.2.1 将数据存储到文件中**
+
+```java
+private EditText edit;
+ edit=(EditText)findViewById(R.id.edit);
+@Override
+public void onDestroy(){
+    super.onDestroy();
+    String inputText=edit.getText().toString();
+    save(inputText);
+}
+
+public void save(String inputText){
+     // 声明FileOutputStream对象
+        FileOutputStream out=null;
+        // 声明BufferedWriter对象
+        BufferedWriter writer=null;
+    try{
+        //利用openFileOutput获得一个FileOutputStream对象
+        out=openFileOutput("data",MODE_PRIVATE);//第一个参数是文件名（注意文件名创建不能包含路径），第二个参数是默认的文件操作模式，当文件名相同时，原来的内容就会被覆盖，另外一种模式MODE_APPEND,表示如果文件不存在就创建新文件，如果存在就追加内容
+        //借助out利用OutputStreamWriter构建BufferedWriter对象
+        writer=new BufferedWriter(new OutputStreamWriter(out));
+        writer.write(inputText);
+    } catch (IOException e) {
+        throw new RuntimeException(e);
+    }finally{
+        try{
+            // 关闭BufferedWriter对象
+            if(writer!=null){
+                writer.close();
+            }
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+
+
+**6.2.2 从文件中读取数据**
+
+（如果有报错则try...catch）
+
+```java
+public String load(){
+   FileInputStream in=null;
+    BufferedReader reader=null;
+    StringBuilder content=new StringBuilder();
+    try {
+        in=openFileInput("data");//传入要读取的文件名
+        reader=new BufferedReader(new InputStreamReader(in));
+        String line="";
+        while((line=reader.readLine())!=null){  
+            content.append(line);
+        }
+    } catch (FileNotFoundException e) {
+        throw new RuntimeException(e);
+    }
+    try {
+        reader.close();
+    } catch (IOException e) {
+        throw new RuntimeException(e);
+    }
+    return content.toString();
+}
+```
+
+在MainActivity中修改
+
+```java
+String inputText=load();
+ // 判断输入文本是否为空
+//TextUtils.isEmpty()可以对字符串null以及空字符串判断结果返回true
+        if(!TextUtils.isEmpty(inputText)){
+            // 设置编辑框的文本为输入文本
+            edit.setText(inputText);
+            // 设置光标位置为输入文本的末尾
+            edit.setSelection(inputText.length());
+    Toast.makeText(this,"Restoring succeeded",Toast.LENGTH_SHORT).show();
+}
+```
+
+
+
+## **6.3 SharedPreferences 存储**
+
+**6.3.1 将数据存储到SharedPreferences**
+
+SharedPreferences是用键值对的方式来存储数据的，存储的数据是什么类型，读取出来就还是什么类型
+
+ *1.得到SharedPreferences对象**(三种方式)*
+    1.Context中的getSharedPreferences()方法：第一个参数是文件名，第二个参数是操作模式MODE_PRIVATE（以可以传0），          表示只有当前应用程序才可以对这个SharedPreferences文件进行读写
+    2.Activity类中的getPreferences()方法：这接收操作模式的参数，自动把当前活动类名作为文件名
+    3.PreferenceManager类中的getDefaultSharedPreferences()方法：这是静态方法，接收Context参数，自动使用包名作为前缀来命名
+
+*2.用SharedPreferences对象调用edit()方法获得一个SharedPreferences.Editor（）对象editor*
+
+*3.editor.addString/.addInt/.addBoolean("描述",数据)；*
+
+*4.editor.apply();提交，会在data/data/com.example....../生成一个shared_prefs目录*
+![image-20250328160901228](C:\Users\yyz20\AppData\Roaming\Typora\typora-user-images\image-20250328160901228.png)
+
+
+
+**6.3.2 从SharedPreferences中读取数据**
+
+```java
+@Override
+public void onClick(View v) {
+    //先获取SharedPreferences对象
+  SharedPreferences pref=getSharedPreferences("data",MODE_PRIVATE);
+  String name=pref.getString("name","");//第一个参数传键值，第二个参数传如果找不到对应键值返回的默认值
+  int age=pref.getInt("age",0);
+  boolean married=pref.getBoolean("married",false);
+  Log.d("MainActivity","name is "+name);
+  Log.d("MainActivity","age is "+age);
+  Log.d("MainActivity","married is "+married);
+}
+```
+
+
+
+**6.3.3 实现记住密码功能**
+
+```
+<LinearLayout
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    >
+    <CheckBox
+        android:id="@+id/remember_password"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="16sp"
+        android:text="Remember Password"
+        />
+
+</LinearLayout>>
+```
+
+1.CheckBox是一个复选框控件，可以用来表示用户是否需要记住密码，用setChecked设置值，用isChecked()判断值
+
+2.存入数据时用SharedPreferences的对象，读取时要用SharedPreferences.Editor 的对象
+
+```java
+private CheckBox rememberPass;
+boolean isRemember=pref.getBoolean("remember_password",false);
+if(isRemember){
+    String account=pref.getString("account","");
+    String password=pref.getString("password","");
+    accountEdit.setText(account);
+    passwordEdit.setText(password);
+    rememberPass.setChecked(true);//把复选框的值改为true
+
+}
+//判断账号密码正确之后
+ editor=pref.edit();
+            if(rememberPass.isChecked()){
+                editor.putString("account",account);
+                editor.putString("password",password);
+                editor.putBoolean("remember_password",true);
+
+            }else{
+                editor.clear();//删除 SharedPreferences 文件中的所有数据
+            }
+            editor.apply();//容易漏掉，要记得提交存储数据才能成功
+```
+
+   
+
+## **6.4 SQLite 数据库存储**
+
+**6.4.1 创建数据库**
+
+*1.创建MyDatabaseHelper类继承自SQLiteOpenHelper*
+
+```java
+//SQLiteOpenHelper是抽象类，继承自它要重写onCreate和onUpgrade
+public class MyDatabaseHelper extends SQLiteOpenHelper {
+    //把建表语句定义为常量CREATE_BOOK
+    public static final String CREATE_BOOK="create table Book("
+            +"id integer primary key autoincrement,"//primary key 将id设为主键，actoincrement表示id列是自增长的
+            +"author text,"//text代表文本类型
+            +"price real,"//real代表浮点型
+            +"pages integer,"
+            +"name text)";
+    private Context mContext;
+    public MyDatabaseHelper(Context context, String name, SQLiteDatabase .CursorFactory factory,int version){
+        super(context,name,factory,version);
+        mContext=context;
+    }
+    //重写onCreate方法
+    @Override
+    public void onCreate(SQLiteDatabase db) {
+        //执行建表语句
+        db.execSQL(CREATE_BOOK);
+        Toast.makeText(mContext,"Create succeeded",Toast.LENGTH_SHORT).show();
+    }
+    //重写onUpgrade方法
+    @Override
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+
+    }
+}
+```
+
+*2.创建MyDatabaseHelper的对象dbHelper，调用getWritableDatabase()创建数据库*
+
+```java
+//参数分别为：Context；数据库名；允许我们在查询数据时返回自定义的Cursos一般传null；数据库的版本号
+dbHelper=new MyDatabaseHelper(this,"BookStore.db",null,1);
+    Button createDatabase=(Button)findViewById(R.id.create_database);
+    createDatabase.setOnClickListener(this);
+}
+@Override
+public void onClick(View v) {
+    // 创建或打开数据库
+    dbHelper.getWritableDatabase();
+    //getReadableDatabase和getWritableDatabase都可以创建或打开数据库，并返回一个可对数据库进行读写操作的对象，但是当数据库不可写入时，getReadableDatabase()返回的对象将以只读的方式打开数据库，而getWritableDatabase()方法会出现 异常
+}
+```
+
+
+
+**使用adb shell查看数据库和表的创建情况**：
+要把adb所在目录配置到环境变量里
+adb shell 进入设备控制台
+$表示当前为普通管理员，要切换为超级管理员#才能继续操作：输入su。（只有模拟器的Traget为Google API时才能切换成功）
+   进入数据库目录：cd  /data/data/com.example.databasetest/databases/
+   打开数据库：sqlite3+数据库名
+   显示当前数据库的表：.table（android_metadata是每个数据库会自动生成的）
+   查看建表语句：.schema
+   退出数据库编辑：.exit   
+
+
+
+**6.4.2 升级数据库**
+以添加新的表为例：
+    *1.添加建表语句*
+
+```java
+public static final String CREATE_CATEGORY="create table Category("
+        +"id integer primary key autoincrement,"
+        +"category_name text,"
+        +"category_code integer)";
+```
+
+   *2.在onCreate方法中执行建表操作*
+       db.execSQL(CREATE_CATEGORY);
+
+   *3.在onUpgrade中执行drop语句，如果数据库已经存在指定表则将其删除，然后重新调用onCreate方法*
+
+```java
+@Override
+public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+    db.execSQL("drop table if exists Book");
+    db.execSQL("drop table if exists Category");
+    onCreate(db);
+}
+```
+
+​    *4.修改MainActivity中的代码，把版本号改为大于1的数字*
+​          dbHelper=new MyDatabaseHelper(this,"BookStore.db",null,2);
+
+
+
+**6.4.3 添加数据**
+
+四种对数据的操作CRUD：C（create）查询：R(Retrieve)  U(Update)  D(Delete)
+
+因为我们前面把id这列指定为autoincrement自增长，所以不用对id列添加数据
+
+```java
+@Override
+public void onClick(View v) {
+    //获得可对数据库进行读写操作的对象db
+    SQLiteDatabase db=dbHelper.getWritableDatabase();
+    ContentValues values=new ContentValues();
+    values.put("name","The Da Vinci Code");
+    values.put("author","Dan Brown");
+    values.put("pages",454);
+    values.put("price",16.96);
+   //insert第一个参数：要添加数据的数据库名称；
+    //第二个参数：未指定添加数据的情况下给某些可为空的列赋值为NULL；一般用不到，传null即可
+    //第三个参数：传入一个ContentValues对象
+    db.insert("Book",null,values);
+    //把values清空
+    values.clear();
+    values.put("name","The Lost Symbol");
+    values.put("author","Dan Brown");
+    values.put("pages",510);
+    values.put("price",19.95);
+    db.insert("Book",null,values);;
+    
+}
+```
+
+进入数据库后显示数据库内容:select * from Book;(记得带分号)
+
+
+
+**6.4.4 更新数据**
+
+```java
+  @Override
+    public void onClick(View v) {
+        SQLiteDatabase db=dbHelper.getWritableDatabase();
+        ContentValues values=new ContentValues();
+        values.put("price",10.99);
+        //update的第三，四个参数用来限定更新数据的位置
+        //第三个参数的？是一个占位符，对应的内容就是第四个参数的内容
+        //这两个参数不写的话就是默认更新所有行的price
+        db.update("Book",values,"name=?",new String[]{"The Da Vinci Code"});
+    }
+});
+```
+
+**6.4.5 删除数据**
+
+```java
+@Override
+public void onClick(View v) {
+    SQLiteDatabase db=dbHelper.getWritableDatabase();
+    //第二，三个参数如果不指定的话就是删除所有行
+    db.delete("Book","pages>?",new String[]{"500"});
+}
+```
+
+
+
+**6.4.6 查询数据**
+
+SQL:Structured Query Language 结构化查询语言
+
+1.SQL提供了一个query（）方法返回一个Cursor对象，查询到的数据都从这个对象取出
+
+### Cursor的主要功能
+
+1. **移动指针**：`Cursor`提供了`moveToFirst`、`moveToNext`、`movePrevious`、`moveToLast`等方法，用于移动指针的位置。
+2. **获取数据**：`Cursor`提供了`getString`、`getInt`、`getDouble`等方法，用于获取指针当前位置的数据。
+3. **获取列索引**：`Cursor`提供了`getColumnIndex`方法，用于获取列的索引。
+
+2.query()有七个参数
+![image-20250327231205209](C:\Users\yyz20\AppData\Roaming\Typora\typora-user-images\image-20250327231205209.png)
+
+```java
+  @Override
+        public void onClick(View v) {
+            SQLiteDatabase db = dbHelper.getWritableDatabase();
+            Cursor cursor = db.query("Book", null, null, null, null, null, null);
+            if (cursor.moveToFirst()) {
+                do {
+                    //getColumnIndex获取列的索引，getString()获取数据
+                    String name = cursor.getString(cursor.getColumnIndex("name"));
+                    String author = cursor.getString(cursor.getColumnIndex("author"));
+                    int pages = cursor.getInt(cursor.getColumnIndex("pages"));
+                    double price = cursor.getDouble(cursor.getColumnIndex("price"));
+                    Log.d("MainActivity", "book name is " + name);
+                    Log.d("MainActivity", "book author is " + author);
+                    Log.d("MainActivity", "book pages is " + pages);
+                    Log.d("MainActivity", "book price is " + price);
+
+                } while (cursor.moveToNext());
+
+            }
+            //最后记得关闭游标
+            //游标是一个资源密集型的对象，如果不及时关闭，可能会导致内存泄漏和其他性能问题
+            cursor.close();
+        }
+    });
+
+}
+```
+
+
+
+**6.4.7 使用SQL操作数据库**
+![image-20250327232105634](C:\Users\yyz20\AppData\Roaming\Typora\typora-user-images\image-20250327232105634.png)
+
+
+
+## **6.5 使用LitePal操作数据库**
+
+**6.5.1 LitePal 简介**
+  是一款开源的Android数据库框架，采用了对象关系框架（ORM）（）,对我们常用的数据库功能进行了封装
+
+**6.5.2 配置LitePal**
+
+   1.编辑app/build.gradle文件
+   在dependencies中添加implementation("org.litepal.android:core:1.4.1")
+
+   2.配置litepal.xml文件
+     app/src/main/->new 目录assets->新建litepal.xml文件
+
+```
+<?xml version="1.0" encoding="utf-8"?>
+<litepal>
+    <dbname value="BookStore"></dbname>>
+    <version value="1"></version>
+<list>
+</list>
+</litepal>
+```
+
+   3.在AndroidManifest中application中添加：
+    android:name="org.litepal.LitePalApplication"
+
+！！！：在settings.gradle的dependencyResolutionManagement中添加maven (  "https://maven.aliyun.com/repository/public" )，不然第三步会报错
+
+**6.5.3 创建和升级数据库**
+面向对象语言和关系型数据库建立的一种映像关系叫做对象关系映射
+*1.创建数据库：*
+    1.新定义Book类，每一个字段对应表中的一列
+    2.把Book类添加到映射模型列表中
+
+```java
+<?xml version="1.0" encoding="utf-8"?>
+<litepal>
+    <dbname value="BookStore"></dbname>>
+    <version value="1"></version>
+<list>
+    //要完整的类名
+    <mapping class="com.example.litepaltest.Book"></mapping>
+</list>
+</litepal>
+```
+
+​     3.LitePal.getDatabase();
+
+*2.升级数据库*
+ 1.如果要增加新的表就新建类然后把新类添加到映射模型列表中
+  2.记得把版本号加1
+
+**6.5.4 使用LitePal 添加数据**
+   1.把Book类继承自DataSupport
+   2.创建Book对象book,用book.setName("");等等
+   最后用book.save();完成添加
+
+**6.5.5 使用LitePal更新数据**
+  1.先设置好要更新的列及其数据，再用updateAll进行更新
+
+```java
+Book book=new Book();
+book.setPrice(14.95);
+book.setPress("Anchor");
+book.updateAll("name=? and author=?", "The Lost Symbol","Dan Brown");//限制要更新的行
+```
+
+  注意：如果要把某一列的值更新为该字段的默认值（比如int默认值为0），不能直接用setPages(0),因为如果没有这句，该字段本身已经初始化为0，LitePal此时是不会对这列进行更新的。所以要用setToDefault()
+
+```java
+Book book=new Book();
+book.setToDefault("pages");
+    book.updateAll();//没有限制所以是对所有的pages生效
+```
+
+**6.5.6  使用LitePal删除数据**
+1.第一种
+
+```java
+Book book=new Book();
+book.delete(Book.class,1);//要删除的表名，要删除的行数
+```
+
+2.第二种：
+DataSupport.deleteAll(Book.class,"price<?","15.0");
+如果不加约束条件，就会删除表中所有数据
+
+**6.5.7 使用LitePal查询数据**
+
+```java
+List<Book> books = DataSupport.findAll(Book.class);//返回Book类型的list集合
+for (Book book : books) {
+    Log.d("MainActivity","Book name: " + book.getName());
+    Log.d("MainActivity","Book author: " + book.getAuthor());
+    Log.d("MainActivity","Book pages: " + book.getPages());
+    Log.d("MainActivity","Book price: " + book.getPrice());
+    Log.d("MainActivity","Book press: " + book.getPress());
+```
+
+查询Book表中的第一条数据：Book firstBook=DataSupport.findFirst(Book.class); 用Book中的get方法获取firstBook中的数据
+
+查询Book表中的最后一条数据：Book lastBook=DataSupport.findLast(Book.class);
+
+![image-20250330142533628](C:\Users\yyz20\AppData\Roaming\Typora\typora-user-images\image-20250330142533628.png)
